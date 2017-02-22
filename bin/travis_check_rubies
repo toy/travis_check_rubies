@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'travis_check_rubies/version'
+
+matches = TravisCheckRubies::Version.matches
+if matches.values.any?
+  ansi_red = `tput setaf 1 2>/dev/null`
+  ansi_green = `tput setaf 2 2>/dev/null`
+  ansi_reset = `tput sgr0 2>/dev/null`
+  puts 'Suggested changes:'
+  matches.each do |version, matched_versions|
+    if !matched_versions || matched_versions.include?(version)
+      puts " #{version}"
+    else
+      puts "#{ansi_red}-#{version}#{ansi_reset}"
+    end
+    if matched_versions
+      (matched_versions - [version]).each do |matched_version|
+        puts "#{ansi_green}+#{matched_version}#{ansi_reset}"
+      end
+    end
+  end
+  abort
+end

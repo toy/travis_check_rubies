@@ -26,12 +26,12 @@ module TravisCheckRubies
         end
       end
 
-      def matches
+      def matches(max_parts: 2)
         matches = {}
         deduplicate = Set.new
         available_versioned = available.select(&:version_parts).sort.reverse
         selected.select(&:version_parts).sort.reverse.each do |version|
-          matches[version] = (0..version.version_parts.length).map do |n|
+          matches[version] = (0..max_parts).map do |n|
             available_versioned.find{ |v| version.match?(v, n) }
           end.reverse.select{ |v| deduplicate.add?(v) }
         end

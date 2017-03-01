@@ -91,6 +91,10 @@ module TravisCheckRubies
       match_by(n) == other.match_by(n)
     end
 
+    def inspect
+      "#<#{self.class.name} #{str}>"
+    end
+
   protected
 
     def compare_by

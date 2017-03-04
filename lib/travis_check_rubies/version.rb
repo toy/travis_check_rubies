@@ -107,7 +107,7 @@ module TravisCheckRubies
     end
 
     def match_by(n)
-      [type, variant, version_parts.take(n)]
+      [type, variant, version_parts && version_parts.take(n)]
     end
   end
 end

@@ -181,6 +181,14 @@ describe TravisCheckRubies::Version do
         (0..4).each{ |n| is_expected.not_to be_match(version, n) }
       end
     end
+
+    context 'for version without version parts' do
+      let(:version){ v('ruby') }
+
+      it 'does not match' do
+        (0..4).each{ |n| is_expected.not_to be_match(version, n) }
+      end
+    end
   end
 
   describe '#inspect' do

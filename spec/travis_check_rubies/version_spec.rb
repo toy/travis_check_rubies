@@ -251,12 +251,12 @@ describe TravisCheckRubies::Version do
       cleanup_instance_variables(described_class)
     end
 
-    it 'gets versions from index urls matching base_url' do
+    it 'gets sorted versions from index urls matching base_url' do
       allow(described_class).to receive(:index_urls).and_return(%w[
         http://rubies.travis-ci.org/osx/AAA/1.tar.gz
         http://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
-        http://rubies.travis-ci.org/ubuntu/BBB/3.tar.gz
-        http://rubies.travis-ci.org/ubuntu/BBB/4.tar.bz2
+        http://rubies.travis-ci.org/ubuntu/BBB/4.tar.gz
+        http://rubies.travis-ci.org/ubuntu/BBB/3.tar.bz2
       ])
       allow(described_class).to receive(:base_url).and_return('http://rubies.travis-ci.org/ubuntu/BBB/')
 

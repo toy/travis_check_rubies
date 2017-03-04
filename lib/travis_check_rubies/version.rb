@@ -14,7 +14,7 @@ module TravisCheckRubies
             url.start_with?(base_url)
           end.map do |url|
             new(url[%r{([^/]+)\.tar\.(?:gz|bz2)$}, 1])
-          end
+          end.sort
         end
       end
 

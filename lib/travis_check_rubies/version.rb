@@ -18,6 +18,36 @@ module TravisCheckRubies
         end
       end
 
+      def update(version, parts: 0..2, allow_pre: false, intermediary: true)
+        return unless version.version_parts
+
+        parts = Array(parts)
+        ordered = allow_pre ? available : available.partition(&:pre).inject(:+)
+        candidates = ordered.reverse.select do |v|
+          v.version_parts && v.match?(version, parts.min) && v >= version
+        end
+
+        updates = if intermediary
+          candidates.group_by do |v|
+            v.version_parts.take(parts.max)
+          end.flat_map do |_, group|
+            parts.map do |n|
+              group.find{ |v| v.match?(version, n) }
+            end
+          end
+        else
+          parts.map do |n|
+            candidates.find{ |v| v.match?(version, n) }
+          end
+        end
+
+        updates.compact!
+        updates.uniq!
+        updates.sort!
+
+        updates unless [version] == updates
+      end
+
       def selected
         @selected ||= begin
           Array(YAML.load_file('.travis.yml')['rvm']).map do |string|

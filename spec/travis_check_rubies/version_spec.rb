@@ -281,4 +281,106 @@ describe TravisCheckRubies::Version do
       3.times{ expect(described_class.available).to eq([v('a'), v('b')]) }
     end
   end
+
+  describe '.update' do
+    before do
+      allow(described_class).to receive(:available).and_return(vs(available_strs).sort)
+    end
+
+    context 'for version without version parts' do
+      let(:available_strs){ %w[ruby 1.2.3 2.3.4] }
+
+      it{ expect(described_class.update(v('ruby'))).to eq nil }
+    end
+
+    context 'when there are no updates' do
+      let(:available_strs){ %w[ruby 1.2.3 2.3.4] }
+
+      it{ expect(described_class.update(v('2.3.4'))).to eq nil }
+    end
+
+    context 'when version is not present' do
+      let(:available_strs){ %w[ruby 1.2.3 2.3.4] }
+
+      it{ expect(described_class.update(v('3.4.5'))).to eq [] }
+    end
+
+    describe 'parts and intermediary' do
+      let(:version){ v('1.7.1') }
+
+      let(:available_strs){ %w[
+        1.7.1 1.7.2  1.8.6 1.8.7  1.9.2 1.9.3
+        2.0.8 2.0.9  2.1.6 2.1.7  2.2.4 2.2.5
+        3.0.4 3.0.5  3.1.2 3.1.3  3.2.0 3.2.1
+      ] }
+
+      context 'when intermediary is true' do
+        it 'returns all latest with distinct 0..2 (by default) matching version parts' do
+          expect(described_class.update(version)).to eq vs(%w[1.7.2 1.8.7 1.9.3 2.0.9 2.1.7 2.2.5 3.0.5 3.1.3 3.2.1])
+        end
+
+        {
+          0 => %w[3.2.1],
+          0..1 => %w[1.9.3 2.2.5 3.2.1],
+          0..2 => %w[1.7.2 1.8.7 1.9.3 2.0.9 2.1.7 2.2.5 3.0.5 3.1.3 3.2.1],
+          1..2 => %w[1.7.2 1.8.7 1.9.3],
+          2 => %w[1.7.2],
+        }.each do |parts, expected|
+          it "returns all latest with distinct #{parts} matching version parts" do
+            expect(described_class.update(version, parts: parts)).to eq vs(expected)
+          end
+        end
+      end
+
+      context 'when intermediary is false' do
+        it 'returns latest for each 0..2 (by default) matching version parts' do
+          expect(described_class.update(version, intermediary: false)).to eq vs(%w[1.7.2 1.9.3 3.2.1])
+        end
+
+        {
+          0 => %w[3.2.1],
+          0..1 => %w[1.9.3 3.2.1],
+          0..2 => %w[1.7.2 1.9.3 3.2.1],
+          1..2 => %w[1.7.2 1.9.3],
+          2 => %w[1.7.2],
+        }.each do |parts, expected|
+          it "returns latest for each #{parts} matching version parts" do
+            expect(described_class.update(version, parts: parts, intermediary: false)).to eq vs(expected)
+          end
+        end
+      end
+    end
+
+    describe 'pre releases' do
+      let(:available_strs){ %w[2.4.0-pre 2.4.0 2.4.1 2.4.2-pre1 2.4.2-pre2] }
+
+      context 'when for pre release there is only newer pre release' do
+        it 'returns next pre release' do
+          expect(described_class.update(v('2.4.2-pre1'))).to eq [v('2.4.2-pre2')]
+        end
+      end
+
+      context 'when there is a newer release and even newer pre release' do
+        context 'for release' do
+          it 'returns newer release when allow_pre is false' do
+            expect(described_class.update(v('2.4.0'))).to eq [v('2.4.1')]
+          end
+
+          it 'returns even newer pre release when allow_pre is true' do
+            expect(described_class.update(v('2.4.0'), allow_pre: true)).to eq [v('2.4.2-pre2')]
+          end
+        end
+
+        context 'for pre release' do
+          it 'returns release when allow_pre is false' do
+            expect(described_class.update(v('2.4.0-pre'))).to eq [v('2.4.1')]
+          end
+
+          it 'returns even newer pre release when allow_pre is true' do
+            expect(described_class.update(v('2.4.0-pre'), allow_pre: true)).to eq [v('2.4.2-pre2')]
+          end
+        end
+      end
+    end
+  end
 end

@@ -1,12 +1,15 @@
 require 'net/http'
 require 'set'
 require 'uri'
-require 'yaml'
 
 module TravisCheckRubies
   class Version
     class << self
       ROOT_URL = 'http://rubies.travis-ci.org/'
+
+      def convert(version_or_string)
+        version_or_string.is_a?(self) ? version_or_string : new(version_or_string)
+      end
 
       def available
         @available ||= begin
@@ -19,6 +22,7 @@ module TravisCheckRubies
       end
 
       def update(version, parts: 0..2, allow_pre: false, intermediary: true)
+        version = convert(version)
         return unless version.version_parts
 
         parts = Array(parts)
@@ -48,26 +52,17 @@ module TravisCheckRubies
         updates unless [version] == updates
       end
 
-      def selected
-        @selected ||= begin
-          Array(YAML.load_file('.travis.yml')['rvm']).map do |string|
-            new(string)
-          end
-        end
-      end
+      def updates(versions, **options)
+        versions = versions.map{ |v| convert(v) }
 
-      def matches(max_parts: 2)
-        matches = {}
-        deduplicate = Set.new
-        available_versioned = available.select(&:version_parts).sort.reverse
-        selected.select(&:version_parts).sort.reverse.each do |version|
-          matches[version] = (0..max_parts).map do |n|
-            available_versioned.find{ |v| version.match?(v, n) }
-          end.reverse.select{ |v| deduplicate.add?(v) }
+        updates = {}
+        has = Set.new
+        versions.uniq.sort.reverse_each do |version|
+          deduplicated = (update(version, options) || [version]).select{ |v| has.add?(v) }
+          updates[version] = [version] == deduplicated ? nil : deduplicated
         end
-        Hash[selected.map do |v|
-          [v, [v] == matches[v] ? nil : matches[v]]
-        end]
+
+        Hash[versions.map{ |v| [v, updates[v]] }]
       end
 
     private

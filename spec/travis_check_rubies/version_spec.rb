@@ -383,4 +383,21 @@ describe TravisCheckRubies::Version do
       end
     end
   end
+
+  describe '.updates' do
+    before do
+      allow(described_class).to receive(:available).
+        and_return(vs(%w[1.8.7 1.9.3 2.0.9 2.1.7]).sort)
+    end
+
+    it 'returns a hash with updates for higher versions removed from updates for lower versions' do
+      expect(described_class.updates(vs(%w[2.0.8 2.1.7 1.8.6 1.9.3])).to_a).
+        to eq({
+          v('2.0.8') => vs(%w[2.0.9]),
+          v('2.1.7') => nil,
+          v('1.8.6') => vs(%w[1.8.7]),
+          v('1.9.3') => nil,
+        }.to_a)
+    end
+  end
 end

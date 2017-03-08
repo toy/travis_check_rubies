@@ -203,8 +203,11 @@ describe TravisCheckRubies::Version do
   end
 
   describe '.index_urls' do
+    let(:cache_path){ FSPath.temp_file_path }
+
     before do
       cleanup_instance_variables(described_class)
+      allow(described_class).to receive(:cache_path).and_return(cache_path)
     end
 
     it 'returns urls from text index of rubies.travis-ci.org' do
@@ -219,6 +222,25 @@ describe TravisCheckRubies::Version do
         once.and_return("a\nb\nc")
 
       3.times{ expect(described_class.send(:index_urls)).to eq(%w[a b c]) }
+    end
+
+    it 'reads cache from file if it is new' do
+      allow(cache_path).to receive(:size?).and_return(616)
+      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME / 2)
+      allow(cache_path).to receive(:read).and_return("foo\nbar")
+
+      expect(Net::HTTP).not_to receive(:get)
+      expect(described_class.send(:index_urls)).to eq(%w[foo bar])
+    end
+
+    it 'writes cache file if it is stale' do
+      allow(cache_path).to receive(:size?).and_return(616)
+      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME * 2)
+      allow(Net::HTTP).to receive(:get).with(URI('http://rubies.travis-ci.org/index.txt')).
+        once.and_return("brave\nnew\nworld")
+
+      expect(described_class.send(:index_urls)).to eq(%w[brave new world])
+      expect(cache_path.read).to eq("brave\nnew\nworld")
     end
   end
 

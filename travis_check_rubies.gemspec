@@ -16,5 +16,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.0.0'
 
+  s.add_runtime_dependency 'fspath', '~> 3.0'
+
   s.add_development_dependency 'rspec', '~> 3.0'
 end

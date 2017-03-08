@@ -1,12 +1,14 @@
 require 'net/http'
+require 'fspath'
 require 'set'
 require 'uri'
 
 module TravisCheckRubies
   class Version
-    class << self
-      ROOT_URL = 'http://rubies.travis-ci.org/'
+    ROOT_URL = 'http://rubies.travis-ci.org/'
+    CACHE_TIME = 24 * 60 * 60
 
+    class << self
       def convert(version_or_string)
         version_or_string.is_a?(self) ? version_or_string : new(version_or_string)
       end
@@ -67,8 +69,26 @@ module TravisCheckRubies
 
     private
 
+      def cache_path
+        @cache_path ||= FSPath(ENV['XDG_CACHE_HOME'] || '~/.cache').expand_path / 'travis_check_rubies.txt'
+      end
+
       def index_urls
-        @index_urls ||= Net::HTTP.get(URI(ROOT_URL + 'index.txt')).split("\n")
+        @index_urls ||= begin
+          if cache_path.size? && cache_path.mtime + CACHE_TIME > Time.now
+            cache_path.read
+          else
+            data = Net::HTTP.get(URI(ROOT_URL + 'index.txt'))
+
+            cache_path.dirname.mkpath
+            FSPath.temp_file('travis_check_rubies', cache_path.dirname) do |f|
+              f.write(data)
+              f.path.rename(cache_path)
+            end
+
+            data
+          end
+        end.split("\n")
       end
 
       def base_url

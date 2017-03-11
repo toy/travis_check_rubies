@@ -1,24 +1,36 @@
 #!/usr/bin/env ruby
 
-require 'travis_check_rubies/version'
+require 'travis_check_rubies/travis_yml'
+require 'optparse'
 
-matches = TravisCheckRubies::Version.matches
-if matches.values.any?
-  ansi_red = `tput setaf 1 2>/dev/null`
-  ansi_green = `tput setaf 2 2>/dev/null`
-  ansi_reset = `tput sgr0 2>/dev/null`
-  puts 'Suggested changes:'
-  matches.each do |version, matched_versions|
-    if !matched_versions || matched_versions.include?(version)
-      puts " #{version}"
-    else
-      puts "#{ansi_red}-#{version}#{ansi_reset}"
-    end
-    if matched_versions
-      (matched_versions - [version]).each do |matched_version|
-        puts "#{ansi_green}+#{matched_version}#{ansi_reset}"
-      end
-    end
+options = {}
+
+op = OptionParser.new
+op.on('--parts N|M..N', 'Match updates by how many parts (0..2 by default)') do |parts|
+  options[:parts] = case parts
+  when /\A\d+\z/
+    parts.to_i
+  when /\A(\d+)..(\d+)\z/
+    $1.to_i..$2.to_i
+  else
+    fail "Expected number N or range M..N, got #{parts}"
   end
-  abort
 end
+op.on('--[no-]allow-pre', 'Allow matching pre releases (false by default)') do |allow_pre|
+  options[:allow_pre] = allow_pre
+end
+op.on('--[no-]intermediary', 'Include all latest version distinct by maximum matchable '\
+    'parts, like 2.3.X when current is 2.2.X and latest is 2.4.X (true by default)') do |intermediary|
+  options[:intermediary] = intermediary
+end
+op.on('--exclude V,V,V', Array, 'Exclude matching versions') do |exclude|
+  options[:exclude] = exclude
+end
+begin
+  op.parse!
+rescue => e
+  abort "#{e}\n\n#{op.help}"
+end
+
+suggestions = TravisCheckRubies::TravisYml.new.suggestions(options)
+abort suggestions if suggestions

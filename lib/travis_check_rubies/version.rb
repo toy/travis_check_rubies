@@ -23,14 +23,19 @@ module TravisCheckRubies
         end
       end
 
-      def update(version, parts: 0..2, allow_pre: false, intermediary: true)
+      def update(version, parts: 0..2, allow_pre: false, intermediary: true, exclude: [])
         version = convert(version)
         return unless version.version_parts
 
         parts = Array(parts)
+        exclude = exclude.map{ |ev| convert(ev) }
         ordered = allow_pre ? available : available.partition(&:pre).inject(:+)
         candidates = ordered.reverse.select do |v|
-          v.version_parts && v.match?(version, parts.min) && v >= version
+          next unless v.version_parts
+          next unless v.match?(version, parts.min)
+          next unless v >= version
+          next if exclude.any?{ |ev| ev.match?(v, ev.version_parts.length) }
+          true
         end
 
         updates = if intermediary

@@ -29,7 +29,7 @@ Merge into your `.travis.yml`:
 matrix:
   include:
     - env: CHECK_RUBIES=✓
-      rvm: '2'
+      rvm: '2.4.0'
       script: bundle exec travis_check_rubies
 ```
 

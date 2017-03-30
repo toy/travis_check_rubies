@@ -103,7 +103,7 @@ module TravisCheckRubies
         else
           base_ubuntu_url = "#{ROOT_URL}ubuntu/"
           first_ubuntu_url = index_urls.sort.find{ |url| url.start_with?(base_ubuntu_url) }
-          fail "First ubuntu url not fount out of:\n#{index_urls.join("\n")}" unless first_ubuntu_url
+          fail "First ubuntu url (#{ROOT_URL}ubuntu/*) not fount out of:\n#{index_urls.join("\n")}" unless first_ubuntu_url
           first_ubuntu_url[%r{^.*/}]
         end
       end

@@ -225,12 +225,23 @@ describe TravisCheckRubies::Version do
     end
 
     it 'reads cache from file if it is new' do
+      cache_path.write "https://rubies.travis-ci.org/foo"
       allow(cache_path).to receive(:size?).and_return(616)
       allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME / 2)
-      allow(cache_path).to receive(:read).and_return("foo\nbar")
 
       expect(Net::HTTP).not_to receive(:get)
-      expect(described_class.send(:index_urls)).to eq(%w[foo bar])
+      expect(described_class.send(:index_urls)).to eq(%w[https://rubies.travis-ci.org/foo])
+    end
+
+    it 'ignores bad cache' do
+      cache_path.write "http://rubies.travis-ci.org/foo"
+      allow(cache_path).to receive(:size?).and_return(616)
+      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME / 2)
+
+      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
+        once.and_return("brave\nnew\nworld")
+      expect(described_class.send(:index_urls)).to eq(%w[brave new world])
+      expect(cache_path.read).to eq("brave\nnew\nworld")
     end
 
     it 'writes cache file if it is stale' do

@@ -79,21 +79,26 @@ module TravisCheckRubies
       end
 
       def index_urls
-        @index_urls ||= begin
-          if cache_path.size? && cache_path.mtime + CACHE_TIME > Time.now
-            cache_path.read
-          else
-            data = Net::HTTP.get(URI(ROOT_URL + 'index.txt'))
+        @index_urls ||= (cached_index_data || fetch_index_data).split("\n")
+      end
 
-            cache_path.dirname.mkpath
-            FSPath.temp_file('travis_check_rubies', cache_path.dirname) do |f|
-              f.write(data)
-              f.path.rename(cache_path)
-            end
+      def cached_index_data
+        return unless cache_path.size?
+        return unless cache_path.mtime + CACHE_TIME > Time.now
+        data = cache_path.read
+        data if data.start_with?(ROOT_URL)
+      end
 
-            data
-          end
-        end.split("\n")
+      def fetch_index_data
+        data = Net::HTTP.get(URI(ROOT_URL + 'index.txt'))
+
+        cache_path.dirname.mkpath
+        FSPath.temp_file('travis_check_rubies', cache_path.dirname) do |f|
+          f.write(data)
+          f.path.rename(cache_path)
+        end
+
+        data
       end
 
       def base_url

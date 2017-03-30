@@ -3,7 +3,7 @@
 
 # travis\_check\_rubies
 
-Check if `.travis.yml` specifies latest available rubies from listed on http://rubies.travis-ci.org and propose changes.
+Check if `.travis.yml` specifies latest available rubies from listed on https://rubies.travis-ci.org and propose changes.
 
 ## Gem installation
 

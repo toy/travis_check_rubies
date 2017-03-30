@@ -5,7 +5,7 @@ require 'uri'
 
 module TravisCheckRubies
   class Version
-    ROOT_URL = 'http://rubies.travis-ci.org/'
+    ROOT_URL = 'https://rubies.travis-ci.org/'
     CACHE_TIME = 24 * 60 * 60
 
     class << self

@@ -211,14 +211,14 @@ describe TravisCheckRubies::Version do
     end
 
     it 'returns urls from text index of rubies.travis-ci.org' do
-      allow(Net::HTTP).to receive(:get).with(URI('http://rubies.travis-ci.org/index.txt')).
+      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
         and_return("one\ntwo\nthree")
 
       expect(described_class.send(:index_urls)).to eq(%w[one two three])
     end
 
     it 'caches result' do
-      allow(Net::HTTP).to receive(:get).with(URI('http://rubies.travis-ci.org/index.txt')).
+      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
         once.and_return("a\nb\nc")
 
       3.times{ expect(described_class.send(:index_urls)).to eq(%w[a b c]) }
@@ -236,7 +236,7 @@ describe TravisCheckRubies::Version do
     it 'writes cache file if it is stale' do
       allow(cache_path).to receive(:size?).and_return(616)
       allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME * 2)
-      allow(Net::HTTP).to receive(:get).with(URI('http://rubies.travis-ci.org/index.txt')).
+      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
         once.and_return("brave\nnew\nworld")
 
       expect(described_class.send(:index_urls)).to eq(%w[brave new world])
@@ -257,7 +257,7 @@ describe TravisCheckRubies::Version do
         allow(described_class).to receive(:`).with('rvm debug').
           and_return(%Q{  foo: "xxx"  \n  system: "XXX/YYY"  \n  bar: "yyy"  })
 
-        expect(described_class.send(:base_url)).to eq('http://rubies.travis-ci.org/XXX/YYY/')
+        expect(described_class.send(:base_url)).to eq('https://rubies.travis-ci.org/XXX/YYY/')
       end
     end
 
@@ -266,12 +266,12 @@ describe TravisCheckRubies::Version do
 
       it 'gets base_url from first ubuntu url in index' do
         allow(described_class).to receive(:index_urls).and_return(%w[
-          http://rubies.travis-ci.org/osx/AAA/1.tar.gz
-          http://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
-          http://rubies.travis-ci.org/ubuntu/BBB/3.tar.gz
+          https://rubies.travis-ci.org/osx/AAA/1.tar.gz
+          https://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
+          https://rubies.travis-ci.org/ubuntu/BBB/3.tar.gz
         ])
 
-        expect(described_class.send(:base_url)).to eq('http://rubies.travis-ci.org/ubuntu/BBB/')
+        expect(described_class.send(:base_url)).to eq('https://rubies.travis-ci.org/ubuntu/BBB/')
       end
     end
   end
@@ -283,22 +283,22 @@ describe TravisCheckRubies::Version do
 
     it 'gets sorted versions from index urls matching base_url' do
       allow(described_class).to receive(:index_urls).and_return(%w[
-        http://rubies.travis-ci.org/osx/AAA/1.tar.gz
-        http://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
-        http://rubies.travis-ci.org/ubuntu/BBB/4.tar.gz
-        http://rubies.travis-ci.org/ubuntu/BBB/3.tar.bz2
+        https://rubies.travis-ci.org/osx/AAA/1.tar.gz
+        https://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
+        https://rubies.travis-ci.org/ubuntu/BBB/4.tar.gz
+        https://rubies.travis-ci.org/ubuntu/BBB/3.tar.bz2
       ])
-      allow(described_class).to receive(:base_url).and_return('http://rubies.travis-ci.org/ubuntu/BBB/')
+      allow(described_class).to receive(:base_url).and_return('https://rubies.travis-ci.org/ubuntu/BBB/')
 
       expect(described_class.available).to eq([v('3'), v('4')])
     end
 
     it 'caches result' do
       allow(described_class).to receive(:index_urls).once.and_return(%w[
-        http://rubies.travis-ci.org/ubuntu/CCC/a.tar.gz
-        http://rubies.travis-ci.org/ubuntu/CCC/b.tar.bz2
+        https://rubies.travis-ci.org/ubuntu/CCC/a.tar.gz
+        https://rubies.travis-ci.org/ubuntu/CCC/b.tar.bz2
       ])
-      allow(described_class).to receive(:base_url).and_return('http://rubies.travis-ci.org/ubuntu/CCC/')
+      allow(described_class).to receive(:base_url).and_return('https://rubies.travis-ci.org/ubuntu/CCC/')
 
       3.times{ expect(described_class.available).to eq([v('a'), v('b')]) }
     end

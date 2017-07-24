@@ -103,7 +103,7 @@ module TravisCheckRubies
 
       def base_url
         @base_url ||= if ENV['TRAVIS']
-          sys_path = `rvm debug`[/system:\s*"(.*?)"/, 1]
+          sys_path = `rvm debug`[/(?:system|remote path):\s*"(.*?)"/, 1]
           "#{ROOT_URL}#{sys_path}/"
         else
           base_ubuntu_url = "#{ROOT_URL}ubuntu/"

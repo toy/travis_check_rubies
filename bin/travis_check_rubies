@@ -2,10 +2,20 @@
 
 require 'travis_check_rubies/travis_yml'
 require 'optparse'
+require 'yaml'
 
-options = {}
+CONFIG_FILE = '.travis_check_rubies.yml'
+
+options = if File.exist?(CONFIG_FILE)
+  yaml = YAML.load_file(CONFIG_FILE) || {}
+  fail "#{CONFIG_FILE} doesn't contain options hash" unless yaml.is_a?(Hash)
+  yaml.map{ |key, value| [key.to_sym, value] }.to_h
+else
+  {}
+end
 
 op = OptionParser.new
+op.banner += "\nOptions can be also specified in .travis_check_rubies.yml"
 op.on('--parts N|M..N', 'Match updates by how many parts (0..2 by default)') do |parts|
   options[:parts] = case parts
   when /\A\d+\z/

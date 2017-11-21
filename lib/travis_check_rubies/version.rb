@@ -34,6 +34,7 @@ module TravisCheckRubies
           next unless v.version_parts
           next unless v.match?(version, parts.min)
           next unless v >= version
+          next if !allow_pre && v.pre && !version.pre
           next if exclude.any?{ |ev| ev.match?(v, ev.version_parts.length) }
           true
         end

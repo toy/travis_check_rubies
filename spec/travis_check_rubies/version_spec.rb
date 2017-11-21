@@ -385,32 +385,50 @@ describe TravisCheckRubies::Version do
     end
 
     describe 'pre releases' do
-      let(:available_strs){ %w[2.4.0-pre 2.4.0 2.4.1 2.4.2-pre1 2.4.2-pre2] }
+      let(:available_strs){ %w[2.4.0-pre 2.4.0 2.4.1 2.4.2-pre1 2.4.2-pre2 2.5.0 2.5.1-preview1 3.0.0-preview1] }
 
-      context 'when for pre release there is only newer pre release' do
-        it 'returns next pre release' do
-          expect(described_class.update(v('2.4.2-pre1'))).to eq [v('2.4.2-pre2')]
+      context 'when allow_pre is false' do
+        context 'for release version' do
+          it 'returns only newer release versions' do
+            expect(described_class.update(v('2.4.0'))).to eq vs(%w[2.4.1 2.5.0])
+          end
+        end
+
+        context 'for pre release version' do
+          context 'there are newer release versions' do
+            it 'returns newer release versions' do
+              expect(described_class.update(v('2.4.0-pre'))).to eq vs(%w[2.4.1 2.5.0 3.0.0-preview1])
+            end
+          end
+
+          context 'there are no newer release versions' do
+            it 'returns newer pre release versions' do
+              expect(described_class.update(v('2.4.2-pre1'))).to eq vs(%w[2.4.2-pre2 2.5.0 3.0.0-preview1])
+            end
+          end
         end
       end
 
-      context 'when there is a newer release and even newer pre release' do
-        context 'for release' do
-          it 'returns newer release when allow_pre is false' do
-            expect(described_class.update(v('2.4.0'))).to eq [v('2.4.1')]
-          end
+      context 'when allow_pre is true' do
+        let(:expected){ vs(%w[2.4.2-pre2 2.5.1-preview1 3.0.0-preview1]) }
 
-          it 'returns even newer pre release when allow_pre is true' do
-            expect(described_class.update(v('2.4.0'), allow_pre: true)).to eq [v('2.4.2-pre2')]
+        context 'for release version' do
+          it 'returns newer pre release versions' do
+            expect(described_class.update(v('2.4.0'), allow_pre: true)).to eq expected
           end
         end
 
-        context 'for pre release' do
-          it 'returns release when allow_pre is false' do
-            expect(described_class.update(v('2.4.0-pre'))).to eq [v('2.4.1')]
+        context 'for pre release version' do
+          context 'there are newer release versions' do
+            it 'returns newer pre release versions' do
+              expect(described_class.update(v('2.4.0-pre'), allow_pre: true)).to eq expected
+            end
           end
 
-          it 'returns even newer pre release when allow_pre is true' do
-            expect(described_class.update(v('2.4.0-pre'), allow_pre: true)).to eq [v('2.4.2-pre2')]
+          context 'there are no newer release versions' do
+            it 'returns newer pre release versions' do
+              expect(described_class.update(v('2.4.2-pre1'), allow_pre: true)).to eq expected
+            end
           end
         end
       end

@@ -6,6 +6,8 @@ require 'yaml'
 
 CONFIG_FILE = '.travis_check_rubies.yml'
 
+update = false
+
 options = if File.exist?(CONFIG_FILE)
   yaml = YAML.load_file(CONFIG_FILE) || {}
   fail "#{CONFIG_FILE} doesn't contain options hash" unless yaml.is_a?(Hash)
@@ -36,11 +38,18 @@ end
 op.on('--exclude V,V,V', Array, 'Exclude matching versions') do |exclude|
   options[:exclude] = exclude
 end
+op.on('-u', '--update', 'Update versions') do
+  update = true
+end
 begin
   op.parse!
 rescue => e
   abort "#{e}\n\n#{op.help}"
 end
 
-suggestions = TravisCheckRubies::TravisYml.new.suggestions(options)
-abort suggestions if suggestions
+travis_yml = TravisCheckRubies::TravisYml.new(options: options)
+if update
+  abort unless travis_yml.update
+else
+  abort unless travis_yml.suggest
+end

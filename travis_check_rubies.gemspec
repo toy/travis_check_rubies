@@ -14,9 +14,10 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = %w[lib]
 
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version = '>= 2.3.0'
 
   s.add_runtime_dependency 'fspath', '~> 3.0'
+  s.add_runtime_dependency 'psych', '~> 3.0'
 
   s.add_development_dependency 'rspec', '~> 3.0'
 end

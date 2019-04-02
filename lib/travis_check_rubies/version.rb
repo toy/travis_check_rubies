@@ -23,7 +23,7 @@ module TravisCheckRubies
         end
       end
 
-      def update(version, parts: 0..2, allow_pre: false, intermediary: true, exclude: [])
+      def update(version, parts: 0..2, allow_pre: false, intermediary: true, exclude: [], conservative: false)
         version = convert(version)
         return unless version.version_parts
 

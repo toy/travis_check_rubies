@@ -53,7 +53,7 @@ module TravisCheckRubies
         versions.each do |version|
           next unless (suggestions = Version.update(version, options))
           next if suggestions.include?(version)
-          to = section == 'include' ? suggestions.last : suggestions.first
+          to = section == 'include' && !options[:conservative] ? suggestions.last : suggestions.first
           @suggestions << Suggestion.new(section, version, suggestions, to)
         end
       end

@@ -38,6 +38,9 @@ end
 op.on('--exclude V,V,V', Array, 'Exclude matching versions') do |exclude|
   options[:exclude] = exclude
 end
+op.on('--conservative', 'Update to first instead of last possible version') do
+  options[:conservative] = true
+end
 op.on('-u', '--update', 'Update versions') do
   update = true
 end

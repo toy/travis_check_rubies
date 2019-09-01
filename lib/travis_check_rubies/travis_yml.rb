@@ -1,7 +1,8 @@
 require 'fspath'
 require 'yaml'
-require 'travis_check_rubies/updater'
-require 'travis_check_rubies/version'
+
+require_relative 'updater'
+require_relative 'version'
 
 module TravisCheckRubies
   class TravisYml

@@ -10,12 +10,6 @@ describe TravisCheckRubies::Version do
     strs.map{ |str| described_class.new(str) }
   end
 
-  def cleanup_instance_variables(o)
-    o.instance_variables.each do |name|
-      o.remove_instance_variable(name)
-    end
-  end
-
   describe 'parsing' do
     {
       '1.2.3-pre1' => {
@@ -202,116 +196,12 @@ describe TravisCheckRubies::Version do
     end
   end
 
-  describe '.index_urls' do
-    let(:cache_path){ FSPath.temp_file_path }
-
-    before do
-      cleanup_instance_variables(described_class)
-      allow(described_class).to receive(:cache_path).and_return(cache_path)
-    end
-
-    it 'returns urls from text index of rubies.travis-ci.org' do
-      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
-        and_return("one\ntwo\nthree")
-
-      expect(described_class.send(:index_urls)).to eq(%w[one two three])
-    end
-
-    it 'caches result' do
-      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
-        once.and_return("a\nb\nc")
-
-      3.times{ expect(described_class.send(:index_urls)).to eq(%w[a b c]) }
-    end
-
-    it 'reads cache from file if it is new' do
-      cache_path.write "https://rubies.travis-ci.org/foo"
-      allow(cache_path).to receive(:size?).and_return(616)
-      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME / 2)
-
-      expect(Net::HTTP).not_to receive(:get)
-      expect(described_class.send(:index_urls)).to eq(%w[https://rubies.travis-ci.org/foo])
-    end
-
-    it 'ignores bad cache' do
-      cache_path.write "http://rubies.travis-ci.org/foo"
-      allow(cache_path).to receive(:size?).and_return(616)
-      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME / 2)
-
-      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
-        once.and_return("brave\nnew\nworld")
-      expect(described_class.send(:index_urls)).to eq(%w[brave new world])
-      expect(cache_path.read).to eq("brave\nnew\nworld")
-    end
-
-    it 'writes cache file if it is stale' do
-      allow(cache_path).to receive(:size?).and_return(616)
-      allow(cache_path).to receive(:mtime).and_return(Time.now - described_class::CACHE_TIME * 2)
-      allow(Net::HTTP).to receive(:get).with(URI('https://rubies.travis-ci.org/index.txt')).
-        once.and_return("brave\nnew\nworld")
-
-      expect(described_class.send(:index_urls)).to eq(%w[brave new world])
-      expect(cache_path.read).to eq("brave\nnew\nworld")
-    end
-  end
-
-  describe '.base_url' do
-    before do
-      cleanup_instance_variables(described_class)
-      allow(ENV).to receive(:[]).with('TRAVIS').and_return(env_travis)
-    end
-
-    context 'when env variable TRAVIS is set' do
-      let(:env_travis){ 'true' }
-
-      it 'gets base_url from rvm debug' do
-        allow(described_class).to receive(:`).with('rvm debug').
-          and_return(%Q{  foo: "xxx"  \n  system: "XXX/YYY"  \n  bar: "yyy"  })
-
-        expect(described_class.send(:base_url)).to eq('https://rubies.travis-ci.org/XXX/YYY/')
-      end
-    end
-
-    context 'when env variable TRAVIS is not set' do
-      let(:env_travis){ nil }
-
-      it 'gets base_url from first ubuntu url in index' do
-        allow(described_class).to receive(:index_urls).and_return(%w[
-          https://rubies.travis-ci.org/osx/AAA/1.tar.gz
-          https://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
-          https://rubies.travis-ci.org/ubuntu/BBB/3.tar.gz
-        ])
-
-        expect(described_class.send(:base_url)).to eq('https://rubies.travis-ci.org/ubuntu/BBB/')
-      end
-    end
-  end
-
   describe '.available' do
-    before do
-      cleanup_instance_variables(described_class)
-    end
+    it 'gets distinct sorted versions by combining indexes' do
+      allow(TravisCheckRubies::TravisIndex).to receive(:new).and_return(double(version_strings: %w[e d c b a]))
+      allow(TravisCheckRubies::RvmIndex).to receive(:new).and_return(double(version_strings: %w[d e f g h]))
 
-    it 'gets sorted versions from index urls matching base_url' do
-      allow(described_class).to receive(:index_urls).and_return(%w[
-        https://rubies.travis-ci.org/osx/AAA/1.tar.gz
-        https://rubies.travis-ci.org/ubuntu/ZZZ/2.tar.gz
-        https://rubies.travis-ci.org/ubuntu/BBB/4.tar.gz
-        https://rubies.travis-ci.org/ubuntu/BBB/3.tar.bz2
-      ])
-      allow(described_class).to receive(:base_url).and_return('https://rubies.travis-ci.org/ubuntu/BBB/')
-
-      expect(described_class.available).to eq([v('3'), v('4')])
-    end
-
-    it 'caches result' do
-      allow(described_class).to receive(:index_urls).once.and_return(%w[
-        https://rubies.travis-ci.org/ubuntu/CCC/a.tar.gz
-        https://rubies.travis-ci.org/ubuntu/CCC/b.tar.bz2
-      ])
-      allow(described_class).to receive(:base_url).and_return('https://rubies.travis-ci.org/ubuntu/CCC/')
-
-      3.times{ expect(described_class.available).to eq([v('a'), v('b')]) }
+      expect(described_class.available).to eq(vs(%w[a b c d e f g h]))
     end
   end
 

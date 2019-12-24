@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version     = '0.5.0'
   s.summary     = 'Are you using the latest rubies in .travis.yml?'
   s.description = 'Check if `.travis.yml` specifies latest available rubies from listed on https://rubies.travis-ci.org and propose changes'
-  s.homepage    = "http://github.com/toy/#{s.name}"
+  s.homepage    = "https://github.com/toy/#{s.name}"
   s.authors     = ['Ivan Kuchin']
   s.license     = 'MIT'
 

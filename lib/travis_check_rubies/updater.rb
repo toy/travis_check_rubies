@@ -26,6 +26,7 @@ module TravisCheckRubies
       node = rvm_node.children.find{ |node| suggestion.from == node.to_ruby }
 
       lines[node.start_line] = suggestion.choices.map do |version|
+        log_change suggestion.from, version, 'rvm'
         line_with_version_change(lines, node, suggestion.from, version)
       end.join('')
     end
@@ -37,7 +38,12 @@ module TravisCheckRubies
 
       node = fetch_node_mapping(entry_node, 'rvm')
 
+      log_change suggestion.from, suggestion.to, 'matrix'
       lines[node.start_line] = line_with_version_change(lines, node, suggestion.from, suggestion.to)
+    end
+
+    def log_change(from, to, section)
+      puts "#{from} -> #{to} \# #{section} section"
     end
 
     def root

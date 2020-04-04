@@ -43,4 +43,4 @@ bundle exec travis_check_rubies
 
 ## Copyright
 
-Copyright (c) 2017-2019 Ivan Kuchin. See [LICENSE.txt](LICENSE.txt) for details.
+Copyright (c) 2017-2020 Ivan Kuchin. See [LICENSE.txt](LICENSE.txt) for details.

@@ -40,7 +40,7 @@ module TravisCheckRubies
 
       @suggestions = []
 
-      updates = Version.updates(rvm_versions, options)
+      updates = Version.updates(rvm_versions, **options)
       rvm_versions.each do |version|
         next unless (suggestions = updates[version])
         @suggestions << Suggestion.new('rvm', version, suggestions)
@@ -52,7 +52,7 @@ module TravisCheckRubies
         'include' => include_versions,
       }.each do |section, versions|
         versions.each do |version|
-          next unless (suggestions = Version.update(version, options))
+          next unless (suggestions = Version.update(version, **options))
           next if suggestions.include?(version)
           to = section == 'include' && !options[:conservative] ? suggestions.last : suggestions.first
           @suggestions << Suggestion.new(section, version, suggestions, to)

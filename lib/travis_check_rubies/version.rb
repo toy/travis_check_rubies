@@ -57,7 +57,7 @@ module TravisCheckRubies
         updates = {}
         has = Set.new
         versions.uniq.sort.reverse_each do |version|
-          deduplicated = (update(version, options) || [version]).select{ |v| has.add?(v) }
+          deduplicated = (update(version, **options) || [version]).select{ |v| has.add?(v) }
           updates[version] = [version] == deduplicated ? nil : deduplicated
         end
 

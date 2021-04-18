@@ -15,6 +15,10 @@ module TravisCheckRubies
       @options = options
     end
 
+    def dist
+      original_object['dist'] || 'xenial'
+    end
+
     def warnings
       return @warnings if @warnings
 

@@ -1,8 +1,18 @@
 require_relative 'fetcher'
 
+require 'travis_check_rubies/travis_yml'
+
 module TravisCheckRubies
   class TravisIndex
     ROOT_URL = 'https://rubies.travis-ci.org/'
+
+    LTS_VERSIONS = {
+      precise: '12.04',
+      trusty: '14.04',
+      xenial: '16.04',
+      bionic: '18.04',
+      focal: '20.04',
+    }
 
     def version_strings
       $stderr.puts "Using #{base_url}"
@@ -20,14 +30,15 @@ module TravisCheckRubies
     end
 
     def base_url
-      @base_url ||= if ENV['TRAVIS']
-        sys_path = `rvm debug`[/(?:system|remote.path):\s*"(.*?)"/, 1]
-        "#{ROOT_URL}#{sys_path}/"
-      else
+      @base_url ||= begin
         base_ubuntu_url = "#{ROOT_URL}ubuntu/"
-        first_ubuntu_url = index_urls.sort.find{ |url| url.start_with?(base_ubuntu_url) }
-        fail "First ubuntu url (#{ROOT_URL}ubuntu/*) not fount out of:\n#{index_urls.join("\n")}" unless first_ubuntu_url
-        first_ubuntu_url[%r{^.*/}]
+        dist = TravisYml.new.dist
+        version = LTS_VERSIONS[dist.to_sym]
+        if version
+          "#{base_ubuntu_url}#{version}/x86_64/"
+        else
+          fail "Unknown dist #{dist}"
+        end
       end
     end
   end

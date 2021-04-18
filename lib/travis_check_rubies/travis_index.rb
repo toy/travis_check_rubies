@@ -5,6 +5,7 @@ module TravisCheckRubies
     ROOT_URL = 'https://rubies.travis-ci.org/'
 
     def version_strings
+      $stderr.puts "Using #{base_url}"
       index_urls.select do |url|
         url.start_with?(base_url)
       end.map do |url|
